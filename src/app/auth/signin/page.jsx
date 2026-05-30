@@ -59,7 +59,7 @@ export default function SignInPage() {
       const { error } = await authClient.signIn.email({
         email,
         password,
-        callbackURL: "/dashboard",
+        callbackURL: "/",
       });
 
       if (error) {

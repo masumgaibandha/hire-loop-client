@@ -13,37 +13,20 @@ import {
   Xmark,
 } from "@gravity-ui/icons";
 
-// Replace with Better Auth session
 const user = null;
 
-// const user = {
-//   name: "Masum",
-//   image: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-//   role: "recruiter",
-// };
-
 const navLinks = [
-  {
-    label: "Browse Jobs",
-    href: "/jobs",
-  },
-  {
-    label: "Companies",
-    href: "/companies",
-  },
-  {
-    label: "Pricing",
-    href: "/pricing",
-  },
+  { label: "Browse Jobs", href: "/jobs" },
+  { label: "Companies", href: "/companies" },
+  { label: "Pricing", href: "/pricing" },
 ];
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#070707]/80 backdrop-blur-xl">
       <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-6">
-        {/* LOGO */}
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500">
             <Briefcase className="h-5 w-5 text-white" />
@@ -58,9 +41,7 @@ const Navbar = () => {
           </div>
         </Link>
 
-        {/* RIGHT SIDE */}
         <div className="flex items-center gap-6">
-          {/* DESKTOP NAVIGATION */}
           <ul className="hidden items-center gap-8 lg:flex">
             {navLinks.map((link) => (
               <li key={link.href}>
@@ -74,10 +55,8 @@ const Navbar = () => {
             ))}
           </ul>
 
-          {/* VERTICAL DIVIDER */}
           <div className="hidden h-6 w-px bg-white/10 lg:block" />
 
-          {/* AUTH SECTION */}
           <div className="hidden items-center gap-4 lg:flex">
             {!user ? (
               <>
@@ -97,7 +76,6 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                {/* DASHBOARD */}
                 <Link
                   href="/dashboard"
                   className="flex items-center gap-2 text-sm text-gray-300 transition hover:text-white"
@@ -106,7 +84,6 @@ const Navbar = () => {
                   Dashboard
                 </Link>
 
-                {/* USER */}
                 <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-2 py-1">
                   <Image
                     src={user?.image || "/default-avatar.png"}
@@ -120,7 +97,6 @@ const Navbar = () => {
                     <p className="text-sm font-medium text-white">
                       {user?.name}
                     </p>
-
                     <p className="text-xs capitalize text-gray-400">
                       {user?.role}
                     </p>
@@ -132,11 +108,11 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* MOBILE MENU BUTTON */}
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={() => setIsMenuOpen((prev) => !prev)}
             className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2 text-white lg:hidden"
             aria-label="Toggle Menu"
+            aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? (
               <Xmark className="h-5 w-5" />
@@ -147,11 +123,9 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* MOBILE MENU */}
       {isMenuOpen && (
         <div className="border-t border-white/10 bg-black/95 lg:hidden">
           <div className="space-y-5 px-4 py-6">
-            {/* MOBILE LINKS */}
             <ul className="flex flex-col gap-4">
               {navLinks.map((link) => (
                 <li key={link.href}>
@@ -168,18 +142,19 @@ const Navbar = () => {
 
             <div className="h-px bg-white/10" />
 
-            {/* MOBILE AUTH */}
             {!user ? (
               <div className="flex flex-col gap-3">
                 <Link
-                  href="/sign-in"
+                  href="/auth/signin"
+                  onClick={() => setIsMenuOpen(false)}
                   className="rounded-xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-white/5"
                 >
                   Sign In
                 </Link>
 
                 <Link
-                  href="/sign-up"
+                  href="/auth/signup"
+                  onClick={() => setIsMenuOpen(false)}
                   className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-gray-200"
                 >
                   Get Started
@@ -187,7 +162,6 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* USER */}
                 <div className="flex items-center gap-3">
                   <Image
                     src={user?.image || "/default-avatar.png"}
@@ -199,17 +173,16 @@ const Navbar = () => {
 
                   <div>
                     <p className="font-medium text-white">{user?.name}</p>
-
                     <p className="text-sm capitalize text-gray-400">
                       {user?.role}
                     </p>
                   </div>
                 </div>
 
-                {/* MOBILE ACTIONS */}
                 <div className="flex flex-col gap-4">
                   <Link
                     href="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 text-gray-300"
                   >
                     <Person className="h-4 w-4" />

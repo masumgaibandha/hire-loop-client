@@ -79,7 +79,7 @@ export default function SignUpPage() {
         name,
         email,
         password,
-        callbackURL: "/dashboard",
+        callbackURL: "/auth/signin",
       });
 
       if (error) {
