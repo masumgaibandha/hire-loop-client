@@ -1,19 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Bars, Briefcase, LayoutList, Person, Xmark } from "@gravity-ui/icons";
+import { Button } from "@heroui/react";
 
-import {
-  Bars,
-  Briefcase,
-  ChevronDown,
-  LayoutListHorizontal,
-  Person,
-  Xmark,
-} from "@gravity-ui/icons";
-
-const user = null;
+import { signOut, useSession } from "@/lib/auth-client";
 
 const navLinks = [
   { label: "Browse Jobs", href: "/jobs" },
@@ -21,13 +14,32 @@ const navLinks = [
   { label: "Pricing", href: "/pricing" },
 ];
 
-const Navbar = () => {
+export default function Navbar() {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const { data: session, isPending } = useSession();
+  const user = session?.user;
+
+  const closeMenu = () => setIsMenuOpen(false);
+
+  const handleSignOut = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          closeMenu();
+          router.push("/auth/signin");
+          router.refresh();
+        },
+      },
+    });
+  };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#070707]/80 backdrop-blur-xl">
       <header className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-6">
-        <Link href="/" className="flex items-center gap-3">
+        {/* Logo */}
+        <Link href="/" onClick={closeMenu} className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500">
             <Briefcase className="h-5 w-5 text-white" />
           </div>
@@ -36,13 +48,13 @@ const Navbar = () => {
             <h2 className="text-lg font-bold tracking-wide text-white">
               Hire Loop
             </h2>
-
             <p className="text-xs text-gray-400">Find your dream career</p>
           </div>
         </Link>
 
-        <div className="flex items-center gap-6">
-          <ul className="hidden items-center gap-8 lg:flex">
+        {/* Desktop Menu */}
+        <div className="hidden items-center gap-6 lg:flex">
+          <ul className="flex items-center gap-8">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
@@ -55,74 +67,61 @@ const Navbar = () => {
             ))}
           </ul>
 
-          <div className="hidden h-6 w-px bg-white/10 lg:block" />
+          <div className="h-6 w-px bg-white/10" />
 
-          <div className="hidden items-center gap-4 lg:flex">
-            {!user ? (
-              <>
-                <Link
-                  href="/auth/signin"
-                  className="text-sm font-medium text-violet-400 transition hover:text-violet-300"
-                >
-                  Sign In
-                </Link>
+          {isPending ? null : user ? (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 text-sm text-gray-300 transition hover:text-white"
+              >
+                <LayoutList className="h-4 w-4" />
+                Dashboard
+              </Link>
 
-                <Link
-                  href="/auth/signup"
-                  className="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-200"
-                >
-                  Get Started
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="flex items-center gap-2 text-sm text-gray-300 transition hover:text-white"
-                >
-                  <LayoutListHorizontal className="h-4 w-4" />
-                  Dashboard
-                </Link>
+              <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white">
+                {user?.name || user?.email}
+              </div>
 
-                <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-2 py-1">
-                  <Image
-                    src={user?.image || "/default-avatar.png"}
-                    alt={user?.name || "User"}
-                    width={36}
-                    height={36}
-                    className="rounded-full object-cover"
-                  />
+              <Button color="danger" variant="flat" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/auth/signin"
+                className="text-sm font-medium text-violet-400 transition hover:text-violet-300"
+              >
+                Sign In
+              </Link>
 
-                  <div className="pr-2">
-                    <p className="text-sm font-medium text-white">
-                      {user?.name}
-                    </p>
-                    <p className="text-xs capitalize text-gray-400">
-                      {user?.role}
-                    </p>
-                  </div>
-
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                </div>
-              </>
-            )}
-          </div>
-
-          <button
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2 text-white lg:hidden"
-            aria-label="Toggle Menu"
-            aria-expanded={isMenuOpen}
-          >
-            {isMenuOpen ? (
-              <Xmark className="h-5 w-5" />
-            ) : (
-              <Bars className="h-5 w-5" />
-            )}
-          </button>
+              <Link
+                href="/auth/signup"
+                className="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-gray-200"
+              >
+                Get Started
+              </Link>
+            </div>
+          )}
         </div>
+
+        {/* Mobile Button */}
+        <button
+          onClick={() => setIsMenuOpen((prev) => !prev)}
+          className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2 text-white lg:hidden"
+          aria-label="Toggle Menu"
+          aria-expanded={isMenuOpen}
+        >
+          {isMenuOpen ? (
+            <Xmark className="h-5 w-5" />
+          ) : (
+            <Bars className="h-5 w-5" />
+          )}
+        </button>
       </header>
 
+      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="border-t border-white/10 bg-black/95 lg:hidden">
           <div className="space-y-5 px-4 py-6">
@@ -131,7 +130,7 @@ const Navbar = () => {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={closeMenu}
                     className="block text-sm font-medium text-gray-300 transition hover:text-white"
                   >
                     {link.label}
@@ -142,11 +141,31 @@ const Navbar = () => {
 
             <div className="h-px bg-white/10" />
 
-            {!user ? (
+            {isPending ? null : user ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="font-medium text-white">
+                    {user?.name || "User"}
+                  </p>
+                  <p className="text-sm text-gray-400">{user?.email}</p>
+                </div>
+
+                <Link
+                  href="/dashboard"
+                  onClick={closeMenu}
+                  className="flex items-center gap-2 text-gray-300"
+                >
+                  <Person className="h-4 w-4" />
+                  Dashboard
+                </Link>
+
+                 <Button onClick={handleSignOut} className="w-full justify-start" variant="danger">Sign Out</Button>
+              </div>
+            ) : (
               <div className="flex flex-col gap-3">
                 <Link
                   href="/auth/signin"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={closeMenu}
                   className="rounded-xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-white/5"
                 >
                   Sign In
@@ -154,46 +173,11 @@ const Navbar = () => {
 
                 <Link
                   href="/auth/signup"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={closeMenu}
                   className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-gray-200"
                 >
                   Get Started
                 </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src={user?.image || "/default-avatar.png"}
-                    alt={user?.name || "User"}
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
-
-                  <div>
-                    <p className="font-medium text-white">{user?.name}</p>
-                    <p className="text-sm capitalize text-gray-400">
-                      {user?.role}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 text-gray-300"
-                  >
-                    <Person className="h-4 w-4" />
-                    Dashboard
-                  </Link>
-
-                  <button className="flex items-center gap-2 text-red-400">
-                    <Xmark className="h-4 w-4" />
-                    Logout
-                  </button>
-                </div>
               </div>
             )}
           </div>
@@ -201,6 +185,4 @@ const Navbar = () => {
       )}
     </nav>
   );
-};
-
-export default Navbar;
+}

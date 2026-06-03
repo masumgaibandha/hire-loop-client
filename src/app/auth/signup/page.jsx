@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Button,
-  Card,
   Description,
   FieldError,
   Form,
@@ -13,214 +12,174 @@ import {
   Label,
   TextField,
 } from "@heroui/react";
-import { Envelope, Eye, EyeSlash, Lock, Person } from "@gravity-ui/icons";
+import { Eye, EyeSlash } from "@gravity-ui/icons";
 
 import { authClient } from "@/lib/auth-client";
 
-export default function SignUpPage() {
+const SignUpPage = () => {
   const router = useRouter();
 
-  const [showPassword, setShowPassword] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const validateName = (value) => {
-    if (!value.trim()) return "Please enter your name.";
-    return null;
-  };
+  const toggleVisibility = () => setIsVisible((prev) => !prev);
 
-  const validateEmail = (value) => {
-    if (!value.trim()) return "Please enter your email address.";
-    if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
-      return "Please enter a valid email address.";
-    }
-    return null;
-  };
-
-  const validatePassword = (value) => {
-    if (!value) return "Please enter your password.";
-    if (value.length < 8) return "Password must be at least 8 characters.";
-    if (!/[A-Z]/.test(value))
-      return "Password must contain at least one uppercase letter.";
-    if (!/[a-z]/.test(value))
-      return "Password must contain at least one lowercase letter.";
-    if (!/[0-9]/.test(value))
-      return "Password must contain at least one number.";
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(value))
-      return "Password must contain at least one special character.";
-    return null;
-  };
-
-  const handleSubmit = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
 
     setErrorMessage("");
     setSuccessMessage("");
 
     const formData = new FormData(e.currentTarget);
-
-    const name = formData.get("name") || "";
-    const email = formData.get("email") || "";
-    const password = formData.get("password") || "";
-
-    if (
-      validateName(name) ||
-      validateEmail(email) ||
-      validatePassword(password)
-    ) {
-      return;
-    }
+    const user = Object.fromEntries(formData.entries());
 
     try {
       setLoading(true);
 
-      const { error } = await authClient.signUp.email({
-        name,
-        email,
-        password,
+      const { data, error } = await authClient.signUp.email({
+        name: user.name,
+        email: user.email,
+        password: user.password,
+        image: user.image,
         callbackURL: "/auth/signin",
       });
 
       if (error) {
-        setErrorMessage(error.message || "Failed to create account.");
+        setErrorMessage(error.message || "Sign-up failed.");
         return;
       }
 
-      setSuccessMessage("Account created successfully.");
+      if (data) {
+        setSuccessMessage("Sign-up successful. Redirecting...");
 
-      setTimeout(() => {
-        router.push("/auth/signin");
-      }, 1000);
-    } catch (err) {
-      setErrorMessage(err?.message || "Something went wrong.");
+        setTimeout(() => {
+          router.push("/auth/signin");
+        }, 1000);
+      }
+    } catch (error) {
+      setErrorMessage(error?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020208] px-4 py-10 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.25),_transparent_42%)]" />
-
-      <Card className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-black/70 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-white">Create Account</h1>
-          <p className="mt-2 text-sm text-white/50">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-[#1e1e1e] to-[#2c2c2c] px-4">
+      <Form
+        className="flex w-full max-w-md flex-col gap-4 rounded-md border border-white/20 bg-white/5 p-6 backdrop-blur-md"
+        onSubmit={onSubmit}
+      >
+        <div>
+          <h2 className="text-4xl font-bold text-white">Create Your Account</h2>
+          <p className="mt-2 text-sm text-white/60">
             Join Hire Loop and start your career journey.
           </p>
         </div>
 
         {errorMessage && (
-          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {errorMessage}
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-4 rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-300">
+          <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-300">
             {successMessage}
           </div>
         )}
 
-        <Form
-          onSubmit={handleSubmit}
-          validationBehavior="aria"
-          className="space-y-4"
+        <TextField isRequired name="name">
+          <Label className="text-white">Name</Label>
+          <Input placeholder="John Doe" />
+          <FieldError className="text-sm text-red-400" />
+        </TextField>
+
+        <TextField name="image" type="url">
+          <Label className="text-white">Profile Image URL</Label>
+          <Input placeholder="https://example.com/avatar.png" />
+          <FieldError className="text-sm text-red-400" />
+        </TextField>
+
+        <TextField
+          isRequired
+          name="email"
+          type="email"
+          validate={(value) => {
+            if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
+              return "Please enter a valid email address";
+            }
+            return null;
+          }}
         >
-          <TextField isRequired name="name" validate={validateName}>
-            <Label className="mb-2 block text-sm font-medium text-white/70">
-              Name
-            </Label>
-            <div className="flex h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 transition focus-within:border-violet-500/60">
-              <Person className="h-4 w-4 text-white/40" />
-              <Input
-                placeholder="Enter your name"
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
-              />
-            </div>
-            <FieldError className="mt-2 text-xs text-red-400" />
-          </TextField>
+          <Label className="text-white">Email</Label>
+          <Input placeholder="john@example.com" />
+          <FieldError className="text-sm text-red-400" />
+        </TextField>
 
-          <TextField
-            isRequired
-            name="email"
-            type="email"
-            validate={validateEmail}
-          >
-            <Label className="mb-2 block text-sm font-medium text-white/70">
-              Email
-            </Label>
-            <div className="flex h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 transition focus-within:border-violet-500/60">
-              <Envelope className="h-4 w-4 text-white/40" />
-              <Input
-                placeholder="Enter your email"
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
-              />
-            </div>
-            <FieldError className="mt-2 text-xs text-red-400" />
-          </TextField>
+        <TextField
+          isRequired
+          minLength={8}
+          name="password"
+          type={isVisible ? "text" : "password"}
+          validate={(value) => {
+            if (value.length < 8) {
+              return "Password must be at least 8 characters";
+            }
+            if (!/[A-Z]/.test(value)) {
+              return "Password must contain at least one uppercase letter";
+            }
+            if (!/[0-9]/.test(value)) {
+              return "Password must contain at least one number";
+            }
+            return null;
+          }}
+        >
+          <Label className="text-white">Password</Label>
 
-          <TextField
-            isRequired
-            name="password"
-            type={showPassword ? "text" : "password"}
-            validate={validatePassword}
-          >
-            <Label className="mb-2 block text-sm font-medium text-white/70">
-              Password
-            </Label>
-            <div className="flex h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 transition focus-within:border-violet-500/60">
-              <Lock className="h-4 w-4 text-white/40" />
-              <Input
-                placeholder="Enter your password"
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-white/40 transition hover:text-white"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeSlash className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            <Description className="mt-2 text-xs text-white/35">
-              Use 8+ characters with uppercase, lowercase, number, and symbol.
-            </Description>
-            <FieldError className="mt-2 text-xs text-red-400" />
-          </TextField>
+          <div className="flex items-center rounded-lg bg-white">
+            <Input placeholder="Enter your password" className="flex-1" />
 
-          <Button
-            type="submit"
-            isLoading={loading}
-            disabled={loading}
-            className="h-12 w-full rounded-xl bg-white font-semibold text-black hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            Create Account
-          </Button>
-        </Form>
+            <button
+              type="button"
+              onClick={toggleVisibility}
+              className="px-3 text-black/60 hover:text-black"
+              aria-label={isVisible ? "Hide password" : "Show password"}
+            >
+              {isVisible ? (
+                <EyeSlash className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
 
-        <p className="mt-6 text-center text-sm text-white/50">
+          <Description className="text-white/80">
+            Must be at least 8 characters with 1 uppercase and 1 number.
+          </Description>
+          <FieldError className="text-sm text-red-400" />
+        </TextField>
+
+        <Button
+          type="submit"
+          isLoading={loading}
+          disabled={loading}
+          variant="outline"
+          className="w-full rounded-lg border-none bg-white text-black hover:bg-transparent hover:text-[#5C53FE]"
+        >
+          Sign Up
+        </Button>
+
+        <p className="text-center text-sm text-white/60">
           Already have an account?{" "}
-          <Link
-            href="/auth/signin"
-            className="font-medium text-violet-400 hover:text-violet-300"
-          >
+          <Link href="/auth/signin" className="text-[#5C53FE] hover:underline">
             Sign in
           </Link>
         </p>
-
-        <div className="mt-4 text-center">
-          <Link href="/" className="text-sm text-white/40 hover:text-white">
-            ← Back to home
-          </Link>
-        </div>
-      </Card>
-    </main>
+      </Form>
+    </div>
   );
-}
+};
+
+export default SignUpPage;
