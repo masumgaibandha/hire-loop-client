@@ -1,171 +1,163 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
+  Card,
   Button,
-  FieldError,
-  Form,
-  Input,
-  Label,
+  Link,
   TextField,
+  Label,
+  InputGroup,
+  Input,
 } from "@heroui/react";
-import { Eye, EyeSlash } from "@gravity-ui/icons";
+import { Eye, EyeSlash, At, ShieldKeyhole } from "@gravity-ui/icons";
+import { signIn } from "@/lib/auth-client";
 
-import { authClient } from "@/lib/auth-client";
+export default function SigninPage() {
+  // Form fields
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-const SignInPage = () => {
-  const router = useRouter();
-
+  // UI States
   const [isVisible, setIsVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const toggleVisibility = () => setIsVisible((prev) => !prev);
+  const toggleVisibility = () => setIsVisible(!isVisible);
 
-  const onSubmit = async (e) => {
+  const handleSignin = async (e) => {
     e.preventDefault();
 
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    const formData = new FormData(e.currentTarget);
-    const user = Object.fromEntries(formData.entries());
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
 
     try {
-      setLoading(true);
-
-      const { data, error } = await authClient.signIn.email({
-        email: user.email,
-        password: user.password,
+      const { data, error: authError } = await signIn.email({
+        email,
+        password,
         callbackURL: "/",
       });
 
-      if (error) {
-        setErrorMessage(error.message || "Invalid email or password.");
-        return;
+      if (authError) {
+        setError(authError.message || "Invalid email or password.");
+      } else {
+        setSuccess("Signed in successfully! Redirecting...");
+        setEmail("");
+        setPassword("");
       }
-
-      if (data) {
-        setSuccessMessage("Sign-in successful. Redirecting...");
-
-        setTimeout(() => {
-          router.push("/");
-        }, 700);
-      }
-    } catch (error) {
-      setErrorMessage(error?.message || "Something went wrong.");
+    } catch (err) {
+      setError("An unexpected network error occurred.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-[#1e1e1e] to-[#2c2c2c] px-4">
-      <Form
-        className="flex w-full max-w-md flex-col gap-4 rounded-md border border-white/20 bg-white/5 p-6 backdrop-blur-md"
-        onSubmit={onSubmit}
-      >
-        <div>
-          <h2 className="text-4xl font-bold text-white">Welcome Back</h2>
-          <p className="mt-2 text-sm text-white/60">
-            Sign in to continue to Hire Loop.
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+      <Card className="w-full max-w-md p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
+        {/* Header Container */}
+        <div className="flex flex-col items-center justify-center gap-1 pb-6 border-b border-zinc-100 dark:border-zinc-800 mb-6 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            Welcome back
+          </h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Enter your credentials to access your account
           </p>
         </div>
 
-        {errorMessage && (
-          <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {errorMessage}
-          </div>
-        )}
+        {/* Form Body */}
+        <form onSubmit={handleSignin} className="flex flex-col gap-5">
+          {/* Email Field */}
+          <TextField
+            required
+            name="email"
+            type="email"
+            className="flex flex-col gap-1.5"
+          >
+            <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Email Address
+            </Label>
+            <InputGroup className="flex items-center gap-2 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 bg-zinc-50 dark:bg-zinc-900 focus-within:border-primary transition-colors">
+              <At className="text-zinc-400 pointer-events-none" size={16} />
+              <Input
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-transparent py-2 text-sm outline-none border-none text-zinc-900 dark:text-zinc-100"
+              />
+            </InputGroup>
+          </TextField>
 
-        {successMessage && (
-          <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-300">
-            {successMessage}
-          </div>
-        )}
+          {/* Password Field */}
+          <TextField
+            required
+            name="password"
+            className="flex flex-col gap-1.5"
+          >
+            <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Password
+            </Label>
+            <InputGroup className="flex items-center gap-2 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 bg-zinc-50 dark:bg-zinc-900 focus-within:border-primary transition-colors">
+              <ShieldKeyhole
+                className="text-zinc-400 pointer-events-none"
+                size={16}
+              />
+              <Input
+                type={isVisible ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-transparent py-2 text-sm outline-none border-none text-zinc-900 dark:text-zinc-100"
+              />
+              <button
+                className="focus:outline-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
+                type="button"
+                onClick={toggleVisibility}
+                aria-label="toggle password visibility"
+              >
+                {isVisible ? <EyeSlash size={18} /> : <Eye size={18} />}
+              </button>
+            </InputGroup>
+          </TextField>
 
-        <TextField
-          isRequired
-          name="email"
-          type="email"
-          validate={(value) => {
-            if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
-              return "Please enter a valid email address";
-            }
+          {/* Dynamic Status Badges */}
+          {error && (
+            <div className="p-3.5 text-xs font-medium rounded-xl bg-red-100/60 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900">
+              <span className="font-semibold">Error:</span> {error}
+            </div>
+          )}
 
-            return null;
-          }}
-        >
-          <Label className="text-white">Email</Label>
-          <Input placeholder="john@example.com" />
-          <FieldError className="text-sm text-red-400" />
-        </TextField>
+          {success && (
+            <div className="p-3.5 text-xs font-medium rounded-xl bg-emerald-100/60 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+              <span className="font-semibold">Success:</span> {success}
+            </div>
+          )}
 
-        <TextField
-          isRequired
-          name="password"
-          type={isVisible ? "text" : "password"}
-          validate={(value) => {
-            if (!value) {
-              return "Please enter your password";
-            }
+          {/* Action Button */}
+          <Button
+            type="submit"
+            color="primary"
+            className="w-full font-semibold rounded-xl text-sm h-12"
+            isLoading={isLoading}
+            isDisabled={isLoading}
+          >
+            Sign In
+          </Button>
 
-            return null;
-          }}
-        >
-          <div className="mb-1 flex items-center justify-between">
-            <Label className="text-white">Password</Label>
-
+          {/* Navigation Option */}
+          <div className="text-center pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            New to HireLoop?{" "}
             <Link
-              href="/forgot-password"
-              className="text-xs font-medium text-white/70 hover:text-[#5C53FE]"
+              href="/auth/signup"
+              className="font-medium cursor-pointer text-sm text-blue-600 dark:text-blue-400"
             >
-              Forgot password?
+              Create an account
             </Link>
           </div>
-
-          <div className="flex items-center rounded-lg bg-white">
-            <Input placeholder="Enter your password" className="flex-1" />
-
-            <button
-              type="button"
-              onClick={toggleVisibility}
-              className="px-3 text-black/60 hover:text-black"
-              aria-label={isVisible ? "Hide password" : "Show password"}
-            >
-              {isVisible ? (
-                <EyeSlash className="h-5 w-5" />
-              ) : (
-                <Eye className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-
-          <FieldError className="text-sm text-red-400" />
-        </TextField>
-
-        <Button
-          type="submit"
-          isLoading={loading}
-          disabled={loading}
-          variant="outline"
-          className="w-full rounded-lg border-none bg-white text-black hover:bg-transparent hover:text-[#5C53FE]"
-        >
-          Sign In
-        </Button>
-
-        <p className="text-center text-sm text-white/60">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/signup" className="text-[#5C53FE] hover:underline">
-            Create account
-          </Link>
-        </p>
-      </Form>
+        </form>
+      </Card>
     </div>
   );
-};
-
-export default SignInPage;
+}

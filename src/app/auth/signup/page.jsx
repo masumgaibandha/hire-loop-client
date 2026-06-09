@@ -1,185 +1,215 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Card,
   Button,
-  Description,
-  FieldError,
-  Form,
-  Input,
-  Label,
+  Link,
   TextField,
+  Label,
+  InputGroup,
+  Input,
+  Radio,
+  RadioGroup,
 } from "@heroui/react";
-import { Eye, EyeSlash } from "@gravity-ui/icons";
+import { Eye, EyeSlash, Person, At, ShieldKeyhole } from "@gravity-ui/icons";
 
 import { authClient } from "@/lib/auth-client";
 
-const SignUpPage = () => {
+export default function SignupPage() {
   const router = useRouter();
 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("seeker");
+
   const [isVisible, setIsVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const toggleVisibility = () => setIsVisible((prev) => !prev);
+  const toggleVisibility = () => {
+    setIsVisible((prev) => !prev);
+  };
 
-  const onSubmit = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    const formData = new FormData(e.currentTarget);
-    const user = Object.fromEntries(formData.entries());
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
 
     try {
-      setLoading(true);
-
-      const { data, error } = await authClient.signUp.email({
-        name: user.name,
-        email: user.email,
-        password: user.password,
-        image: user.image,
+      const { data, error: authError } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+        role,
         callbackURL: "/auth/signin",
       });
+     
 
-      if (error) {
-        setErrorMessage(error.message || "Sign-up failed.");
+      if (authError) {
+        setError(authError.message || "Something went wrong during signup.");
         return;
       }
 
-      if (data) {
-        setSuccessMessage("Sign-up successful. Redirecting...");
+      setSuccess("Account created successfully! Redirecting...");
 
-        setTimeout(() => {
-          router.push("/auth/signin");
-        }, 1000);
-      }
-    } catch (error) {
-      setErrorMessage(error?.message || "Something went wrong.");
+      setName("");
+      setEmail("");
+      setPassword("");
+      setRole("seeker");
+
+      router.push("/auth/signin");
+    } catch (err) {
+      console.error("Signup Error:", err);
+      setError(err?.message || "An unexpected network error occurred.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-[#1e1e1e] to-[#2c2c2c] px-4">
-      <Form
-        className="flex w-full max-w-md flex-col gap-4 rounded-md border border-white/20 bg-white/5 p-6 backdrop-blur-md"
-        onSubmit={onSubmit}
-      >
-        <div>
-          <h2 className="text-4xl font-bold text-white">Create Your Account</h2>
-          <p className="mt-2 text-sm text-white/60">
-            Join Hire Loop and start your career journey.
+    <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-10 dark:bg-zinc-950">
+      <Card className="w-full max-w-md border border-zinc-200 p-6 shadow-sm dark:border-zinc-800">
+        <div className="mb-6 border-b border-zinc-100 pb-6 text-center dark:border-zinc-800">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            Create an account
+          </h1>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            Join Hire Loop and start your journey
           </p>
         </div>
 
-        {errorMessage && (
-          <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {errorMessage}
-          </div>
-        )}
+        <form onSubmit={handleSignup} className="flex flex-col gap-5">
+          <TextField required name="name" className="flex flex-col gap-1.5">
+            <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Name
+            </Label>
+            <InputGroup className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 transition-colors focus-within:border-primary dark:border-zinc-800 dark:bg-zinc-900">
+              <Person size={16} className="text-zinc-400" />
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your full name"
+                className="w-full border-none bg-transparent py-2 text-sm text-zinc-900 outline-none dark:text-zinc-100"
+              />
+            </InputGroup>
+          </TextField>
 
-        {successMessage && (
-          <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-300">
-            {successMessage}
-          </div>
-        )}
+          <TextField required name="email" className="flex flex-col gap-1.5">
+            <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Email Address
+            </Label>
+            <InputGroup className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 transition-colors focus-within:border-primary dark:border-zinc-800 dark:bg-zinc-900">
+              <At size={16} className="text-zinc-400" />
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full border-none bg-transparent py-2 text-sm text-zinc-900 outline-none dark:text-zinc-100"
+              />
+            </InputGroup>
+          </TextField>
 
-        <TextField isRequired name="name">
-          <Label className="text-white">Name</Label>
-          <Input placeholder="John Doe" />
-          <FieldError className="text-sm text-red-400" />
-        </TextField>
+          <TextField
+            required
+            name="password"
+            className="flex flex-col gap-1.5"
+          >
+            <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Password
+            </Label>
+            <InputGroup className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 transition-colors focus-within:border-primary dark:border-zinc-800 dark:bg-zinc-900">
+              <ShieldKeyhole size={16} className="text-zinc-400" />
+              <Input
+                type={isVisible ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Choose a password"
+                className="w-full border-none bg-transparent py-2 text-sm text-zinc-900 outline-none dark:text-zinc-100"
+              />
 
-        <TextField name="image" type="url">
-          <Label className="text-white">Profile Image URL</Label>
-          <Input placeholder="https://example.com/avatar.png" />
-          <FieldError className="text-sm text-red-400" />
-        </TextField>
+              <button
+                type="button"
+                onClick={toggleVisibility}
+                aria-label={isVisible ? "Hide password" : "Show password"}
+                className="text-zinc-400 transition hover:text-zinc-600 focus:outline-none dark:hover:text-zinc-200"
+              >
+                {isVisible ? <EyeSlash size={18} /> : <Eye size={18} />}
+              </button>
+            </InputGroup>
+          </TextField>
 
-        <TextField
-          isRequired
-          name="email"
-          type="email"
-          validate={(value) => {
-            if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
-              return "Please enter a valid email address";
-            }
-            return null;
-          }}
-        >
-          <Label className="text-white">Email</Label>
-          <Input placeholder="john@example.com" />
-          <FieldError className="text-sm text-red-400" />
-        </TextField>
+          <div className="flex flex-col gap-3">
+            <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Account Type
+            </Label>
 
-        <TextField
-          isRequired
-          minLength={8}
-          name="password"
-          type={isVisible ? "text" : "password"}
-          validate={(value) => {
-            if (value.length < 8) {
-              return "Password must be at least 8 characters";
-            }
-            if (!/[A-Z]/.test(value)) {
-              return "Password must contain at least one uppercase letter";
-            }
-            if (!/[0-9]/.test(value)) {
-              return "Password must contain at least one number";
-            }
-            return null;
-          }}
-        >
-          <Label className="text-white">Password</Label>
-
-          <div className="flex items-center rounded-lg bg-white">
-            <Input placeholder="Enter your password" className="flex-1" />
-
-            <button
-              type="button"
-              onClick={toggleVisibility}
-              className="px-3 text-black/60 hover:text-black"
-              aria-label={isVisible ? "Hide password" : "Show password"}
+            <RadioGroup
+              value={role}
+              name="role"
+              onChange={(value) => setRole(value)}
+              orientation="horizontal"
             >
-              {isVisible ? (
-                <EyeSlash className="h-5 w-5" />
-              ) : (
-                <Eye className="h-5 w-5" />
-              )}
-            </button>
+              <Radio value="seeker">
+                <Radio.Control>
+                  <Radio.Indicator />
+                </Radio.Control>
+                <Radio.Content>
+                  <Label>Job Seeker</Label>
+                </Radio.Content>
+              </Radio>
+
+              <Radio value="recruiter">
+                <Radio.Control>
+                  <Radio.Indicator />
+                </Radio.Control>
+                <Radio.Content>
+                  <Label>Recruiter</Label>
+                </Radio.Content>
+              </Radio>
+            </RadioGroup>
           </div>
 
-          <Description className="text-white/80">
-            Must be at least 8 characters with 1 uppercase and 1 number.
-          </Description>
-          <FieldError className="text-sm text-red-400" />
-        </TextField>
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-100/60 p-3.5 text-xs font-medium text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-400">
+              <span className="font-semibold">Error:</span> {error}
+            </div>
+          )}
 
-        <Button
-          type="submit"
-          isLoading={loading}
-          disabled={loading}
-          variant="outline"
-          className="w-full rounded-lg border-none bg-white text-black hover:bg-transparent hover:text-[#5C53FE]"
-        >
-          Sign Up
-        </Button>
+          {success && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-100/60 p-3.5 text-xs font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-400">
+              <span className="font-semibold">Success:</span> {success}
+            </div>
+          )}
 
-        <p className="text-center text-sm text-white/60">
-          Already have an account?{" "}
-          <Link href="/auth/signin" className="text-[#5C53FE] hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </Form>
-    </div>
+          <Button
+            type="submit"
+            color="primary"
+            isPending={isLoading}
+            isDisabled={isLoading}
+            className="h-12 w-full rounded-xl text-sm font-semibold"
+          >
+            Sign Up
+          </Button>
+
+          <div className="mt-2 border-t border-zinc-100 pt-4 text-center text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
+            Already have an account?{" "}
+            <Link
+              href="/auth/signin"
+              className="cursor-pointer text-sm font-medium text-blue-600 dark:text-blue-400"
+            >
+              Sign in instead
+            </Link>
+          </div>
+        </form>
+      </Card>
+    </main>
   );
-};
-
-export default SignUpPage;
+}
