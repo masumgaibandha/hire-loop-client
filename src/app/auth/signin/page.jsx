@@ -71,7 +71,7 @@ export default function SigninPage() {
         <form onSubmit={handleSignin} className="flex flex-col gap-5">
           {/* Email Field */}
           <TextField
-            required
+            isRequired
             name="email"
             type="email"
             className="flex flex-col gap-1.5"
@@ -92,7 +92,7 @@ export default function SigninPage() {
 
           {/* Password Field */}
           <TextField
-            required
+            isRequired
             name="password"
             className="flex flex-col gap-1.5"
           >

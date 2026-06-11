@@ -72,7 +72,7 @@ export default function Navbar() {
           {isPending ? null : user ? (
             <div className="flex items-center gap-4">
               <Link
-                href="/dashboard"
+                href="/dashboard/recruiter"
                 className="flex items-center gap-2 text-sm text-gray-300 transition hover:text-white"
               >
                 <LayoutList className="h-4 w-4" />

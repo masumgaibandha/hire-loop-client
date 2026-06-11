@@ -85,7 +85,7 @@ export default function SignupPage() {
         </div>
 
         <form onSubmit={handleSignup} className="flex flex-col gap-5">
-          <TextField required name="name" className="flex flex-col gap-1.5">
+          <TextField isRequired name="name" className="flex flex-col gap-1.5">
             <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Name
             </Label>
@@ -101,7 +101,7 @@ export default function SignupPage() {
             </InputGroup>
           </TextField>
 
-          <TextField required name="email" className="flex flex-col gap-1.5">
+          <TextField isRequired name="email" className="flex flex-col gap-1.5">
             <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Email Address
             </Label>
@@ -118,7 +118,7 @@ export default function SignupPage() {
           </TextField>
 
           <TextField
-            required
+            isRequired
             name="password"
             className="flex flex-col gap-1.5"
           >
